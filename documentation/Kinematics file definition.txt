@@ -1,0 +1,59 @@
+FORMATO DEL FICHERO
+-------------------
+
+Para escribir un fichero de cinemática, hay que considerar:
+	- Las líneas que empiezan por # son comentarios y se deben ignorar
+	- Puede haber líneas con comentarios al final, es decir, que en una línea también se debe ignorar todo el texto a partir de un # (incluído)
+	
+	- El fichero se divide en secciones.
+	- El nombre de la sección se escribe entre corchetes. Ejemplo: [Vars]
+	- Una sección termina cuando empieza otra o cuando se ha llegado a final de fichero
+	
+	- El analizador debe ser case-sensitive
+
+Las secciones admitidas son:
+	- Sección 'Vars':
+		- las líneas de esta sección tienen el siguiente aspecto
+			<nombre de variable> = '<texto descriptivo de la variable>', <valor por defecto>
+		- <Nombre de variable> es un identificador como los nombres de variable de C
+		- <texto descriptivo> es un texto entre comillas simples que describe a la variable
+		- <valor por defecto> es un número flotante con el valor que tendrá inicialmente la variable
+		- Toda esta información deberá meterse en un diccionario, que además tendrá otro campo con el valor real de la variable (float)
+		- El valor real de la variable coincidirá con el valor por defecto cuando se carga el fichero
+	- Sección 'Joints':
+		- Cada línea escribe un nodo de la cinemática de una máquina, el origen de un sistema de coordenadas dextrógiro que se produce al aplicar una
+		  transformación al nodo previo.
+		- Cada línea tiene un conjunto de campos separados por |, con el siguiente aspecto
+			<id_joint>|<tipo de nodo>|<Min>|<Max>|<Offset>|<Encoder>|<Factor Encoder>|<Prev>
+		- Los espacios y tabuladores se pueden ignorar.
+		- Si un campo está en blanco, se toma su valor por defecto.
+		- <id_joint>: Número del nodo(entero), empezando en 1. Son únicos y no se pueden repetir
+		- <tipo de nodo>: Se aceptan los siguientes tipos de nodo:
+			- LINEAL : Es un nodo que se desplaza linealmente siguiendo el eje Z del nodo previo
+			- YAW: Es un nodo que está girado alrededor de Z del nodo previo
+			- PITCH: Es un nodo que está girado alrededor de Y del nodo previo
+			- ROLL: Es un nodo que está girado alrededor de X del nodo previo
+		- <Min>: Valor mínimo que puede tener ese nodo. Puede ser una expresión. Por defecto es 0.
+		- <Max>: Valor máximo que puede tener ese nodo. Puede ser una expresión. Por defecto es el máximo flotante positivo.
+		- <Offset>: Valor para calcular el punto de inicio de la transformación con respecto al nodo previo. Si es LINEAL se refiere a una distancia. YAW,
+			ROLL y PITCH se refieren a ángulos en grados. Puede ser una expresión. Por defecto es 0.
+		- <Encoder>: Si la transformación depende de un valor externo, en este caso va a ser el valor de encoder de una máquina. Entero mayor que 1. Por defecto es 0 y no se tiene en cuenta en los cálculos.
+		- <Factor encoder>: constante por la que hay que multiplicar el valor del encoder externo para que nos de mm o grados, dependiendo del tipo de nodo. Por defecto es 1.
+		- <Prev>: El identificador de nodo anterior. El nodo actual que representa la línea que estamnos leyendo es una transformación sobre el anterior.
+			Prev debe estar definido en el fichero (que haya una línea con id_joint a la que nos estemos refiriendo con Prev), o puede ser 0 si se refiere
+			al origen de coordenadas de mundo.
+		
+Las expresiones estarán compuestas de números flotantes, operadores y variables:
+	- Los nombres de las variables en una expresión vienen precedidos por $
+	
+Para comprender cómo el programa interpreta el fichero, el cálculo de la cinemática se hará de la siguiente forma:
+	- Se toma el sistema de referencia del nodo anterior (o el origen de coordenadas de mundo si Prev es 0)
+	- Se aplica la transformación:
+		- Primero calculando el valor de las expresiones usando variables.
+		- El valor numérico calculado del nodo será la suma del campo Min, el campo offset, y del valor del encoder (si lo tiene) por el factor del encoder
+		- Si el nodo es tipo LINEAL, el sistema de coordenadas del nodo es el del anterior pero desplazado el valor calculado en Z del sistema de coordenadas anterior.
+		- Si el nodo es tipo YAW, el sistema de coordenadas del nodo es el del anterior girando el valor calculado alrededor de Z del sistema de coordenadas anterior.
+		- Si el nodo es tipo PITCH, el sistema de coordenadas del nodo es el del anterior girando el valor calculado alrededor de Y del sistema de coordenadas anterior.
+		- Si el nodo es tipo ROLL, el sistema de coordenadas del nodo es el del anterior girando el valor calculado alrededor de X del sistema de coordenadas anterior.
+
+Copyright 2025 Gonzalo Fernández Hernández

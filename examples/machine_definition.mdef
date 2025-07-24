@@ -1,0 +1,23 @@
+[Vars]
+rad = 'Radius of the zipper', 1000
+inc_z = 'Angle of displacement of z_axis from Vertical', 20
+off_z = 'Minimum distance of the worm screw', 500
+max_z = 'Maximum value of the worm screw', 100
+inc_a = 'Angle of the last arm from the perpendicular', 20
+h_fork = 'Half lenght of the fork', 200
+
+[Joints]
+#n	|Type	|Min	|Max	|Offset		|Encoder	|Factor	| Prev
+1	|YAW	|0		|360	|0			|1			|		| 0
+2	|PITCH	|		|		|90			|			|		| 1
+3	|LINEAL	|		|		|$rad		|			|		| 2
+4	|PITCH	|		|		|90 - $inc_z|			|		| 3
+5	|LINEAL	|0		|$max_z	|$off_z		|2			|10		| 4
+6	|PITCH	|		|		|90 - $inc_a|			|		| 5
+7	|ROLL	|		|		|90			|			|		| 6
+8	|ROLL	|		|		|-90		|			|		| 6
+9	|LINEAL	|		|		|$h_fork	|			|		| 7
+10	|LINEAL	|		|		|$h_fork	|			|		| 8
+11	|ROLL	|		|		|-90		|			|		| 9
+12	|ROLL	|		|		|90			|			|		| 10
+
